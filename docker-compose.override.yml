@@ -1,0 +1,31 @@
+﻿version: '3.4'
+
+services:
+  some-weird-application-backend:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - ASPNETCORE_HTTPS_PORT=44384
+      - ConnectionString=${ESHOP_AZURE_ORDERING_DB:-Server=sql.data;Database=master;User Id=sa;Password=Pass@word}
+    ports:
+      - "56122:80"
+      - "44384:443"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+
+  some-weird-application-frontend:
+    ports:
+      - "8080:80"
+      - "44343:443"
+
+  sql.data:
+    volumes:
+      - ~/docker-dir/weird-app/data:/var/opt/mssql
+    environment:
+      - SA_PASSWORD=Pass@word
+      - ACCEPT_EULA=Y
+      - MSSQL_PID=Developer
+    ports:
+      - "5433:1433"
+    container_name: sql
