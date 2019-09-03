@@ -1,0 +1,13 @@
+#main-head{
+    background-color: cornflowerblue;
+    text-align: center;
+  }
+
+.container{
+  display: flex;
+  justify-content: center;
+}
+
+.container *{
+  width: 1000px;
+}
