@@ -27,7 +27,7 @@ namespace SomeWeirdApplicationBackend
         {
             services.Configure<CustomModelSettings>(Configuration);
             services.AddCustomDbContext(Configuration);
-            services.AddSingleton<ModelContextSeed>();
+            services.AddSingleton<BankingContextSeed>();
             services.AddCors(options =>
             {
                 options.AddDefaultPolicy(policy =>
@@ -57,8 +57,11 @@ namespace SomeWeirdApplicationBackend
             app.UseCors();
             app.UseMvc();
 
-            var seed = (ModelContextSeed)app.ApplicationServices.GetService(typeof(ModelContextSeed));
-            seed.SeedAsync(app).Wait();
+            //var seed = (ModelContextSeed)app.ApplicationServices.GetService(typeof(ModelContextSeed));
+            //seed.SeedAsync(app).Wait();
+
+            var seed2 = (BankingContextSeed)app.ApplicationServices.GetService(typeof(BankingContextSeed));
+            seed2.SeedAsync(app).Wait();
         }
     }
 
@@ -66,7 +69,7 @@ namespace SomeWeirdApplicationBackend
     {
         public static IServiceCollection AddCustomDbContext(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddDbContext<ModelContext>(options =>
+            services.AddDbContext<BankingContext>(options =>
             {
                 options.UseSqlServer(configuration["ConnectionString"],
                                      sqlServerOptionsAction: sqlOptions =>

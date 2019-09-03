@@ -3,16 +3,16 @@ using SomeWeirdApplicationBackend.Models;
 
 namespace SomeWeirdApplicationBackend.Infrastructure
 {
-    public class ModelContext: DbContext
-    {
-        public ModelContext(DbContextOptions<ModelContext> options) : base(options)
-        {
-        }
-        public DbSet<CustomModel> CustomModelItems { get; set; }
+    //public class ModelContext: DbContext
+    //{
+    //    public ModelContext(DbContextOptions<ModelContext> options) : base(options)
+    //    {
+    //    }
+    //    public DbSet<CustomModel> CustomModelItems { get; set; }
 
-        protected override void OnModelCreating(ModelBuilder builder)
-        {
-            builder.ApplyConfiguration(new CustomModelContextConfiguration());
-        }
-    }
+    //    protected override void OnModelCreating(ModelBuilder builder)
+    //    {
+    //        builder.ApplyConfiguration(new CustomModelContextConfiguration());
+    //    }
+    //}
 }

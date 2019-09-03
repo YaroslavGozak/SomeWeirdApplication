@@ -19,16 +19,14 @@ namespace SomeWeirdApplicationBackend.Controllers
     [ApiController]
     public class DataController : ControllerBase
     {
-        private readonly ModelContext _modelContext;
+        private readonly BankingContext _context;
         private readonly CustomModelSettings _settings;
         private readonly IConfiguration _configuration;
-        //private readonly ICatalogIntegrationEventService _catalogIntegrationEventService;
 
-        public DataController(ModelContext context, IOptionsSnapshot<CustomModelSettings> settings, IConfiguration configuration
-            // ,ICatalogIntegrationEventService catalogIntegrationEventService
+        public DataController(BankingContext context, IOptionsSnapshot<CustomModelSettings> settings, IConfiguration configuration
             )
         {
-            _modelContext = context ?? throw new ArgumentNullException(nameof(context));
+            _context = context ?? throw new ArgumentNullException(nameof(context));
             //_catalogIntegrationEventService = catalogIntegrationEventService ?? throw new ArgumentNullException(nameof(catalogIntegrationEventService));
             _settings = settings.Value;
 
@@ -98,16 +96,16 @@ namespace SomeWeirdApplicationBackend.Controllers
                 return Ok(items);
             }
 
-            var totalItems = await _modelContext.CustomModelItems
-                .LongCountAsync();
+            //var totalItems = await _modelContext.CustomModelItems
+            //    .LongCountAsync();
 
-            var itemsOnPage = await _modelContext.CustomModelItems
-                .OrderBy(c => c.Value)
-                .Skip(pageSize * pageIndex)
-                .Take(pageSize)
-                .ToListAsync();
+            //var itemsOnPage = await _modelContext.CustomModelItems
+            //    .OrderBy(c => c.Value)
+            //    .Skip(pageSize * pageIndex)
+            //    .Take(pageSize)
+            //    .ToListAsync();
 
-            var model = new PaginatedItemsViewModel<CustomModel>(pageIndex, pageSize, totalItems, itemsOnPage);
+            var model = new PaginatedItemsViewModel<CustomModel>(pageIndex, pageSize, 0, null);
 
             return Ok(model);
         }
@@ -131,20 +129,23 @@ namespace SomeWeirdApplicationBackend.Controllers
             //    return Ok(items);
             //}
 
-            using(var context = new SqlConnection(_configuration["ConnectionString"]))
-            {
-                try
-                {
-                    context.Open();
-                    var databases = context.Query<string>(@"SELECT Name FROM sys.Databases", commandTimeout: 60);
+            //using (var context = new SqlConnection(_configuration["ConnectionString"]))
+            //{
+            //    try
+            //    {
+            //        context.Open();
+            //        var databases = context.Query<string>(@"SELECT Name FROM sys.Databases", commandTimeout: 60);
 
-                    return Ok(databases);
-                }
-                catch(Exception ex)
-                {
-                    return BadRequest(ex.Message);
-                }
-            }; 
+            //        return Ok(databases);
+            //    }
+            //    catch(Exception ex)
+            //    {
+            //        return BadRequest(ex.Message);
+            //    }
+            //}; 
+
+            var cards = await _context.Cards.ToListAsync();
+            return Ok(cards);
         }
 
         private async Task<List<CustomModel>> GetItemsByIdsAsync(string ids)
@@ -159,9 +160,9 @@ namespace SomeWeirdApplicationBackend.Controllers
             var idsToSelect = numIds
                 .Select(id => id.Value);
 
-            var items = await _modelContext.CustomModelItems.Where(cm => idsToSelect.Contains(cm.Id)).ToListAsync();
+            //var items = await _modelContext.CustomModelItems.Where(cm => idsToSelect.Contains(cm.Id)).ToListAsync();
 
-            return items;
+            return null;
         }
     }
 }
