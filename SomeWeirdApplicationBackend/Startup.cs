@@ -56,12 +56,7 @@ namespace SomeWeirdApplicationBackend
             app.UseHttpsRedirection();
             app.UseCors();
             app.UseMvc();
-
-            //var seed = (ModelContextSeed)app.ApplicationServices.GetService(typeof(ModelContextSeed));
-            //seed.SeedAsync(app).Wait();
-
-            var seed2 = (BankingContextSeed)app.ApplicationServices.GetService(typeof(BankingContextSeed));
-            seed2.SeedAsync(app).Wait();
+            app.MigrateDatabaseAndSeed();
         }
     }
 
@@ -70,6 +65,22 @@ namespace SomeWeirdApplicationBackend
         public static IServiceCollection AddCustomDbContext(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddDbContext<BankingContext>(options =>
+            {
+                options.UseSqlServer(configuration["ConnectionString"],
+                                     sqlServerOptionsAction: sqlOptions =>
+                                     {
+                                         sqlOptions.MigrationsAssembly(typeof(Startup).GetTypeInfo().Assembly.GetName().Name);
+                                         //Configuring Connection Resiliency: https://docs.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency 
+                                         sqlOptions.EnableRetryOnFailure(maxRetryCount: 10, maxRetryDelay: TimeSpan.FromSeconds(30), errorNumbersToAdd: null);
+                                     });
+
+                // Changing default behavior when client evaluation occurs to throw. 
+                // Default in EF Core would be to log a warning when client evaluation is performed.
+                options.ConfigureWarnings(warnings => warnings.Throw(RelationalEventId.QueryClientEvaluationWarning));
+                //Check Client vs. Server evaluation: https://docs.microsoft.com/en-us/ef/core/querying/client-eval
+            });
+
+            services.AddDbContext<WebSiteContext>(options =>
             {
                 options.UseSqlServer(configuration["ConnectionString"],
                                      sqlServerOptionsAction: sqlOptions =>
@@ -99,6 +110,24 @@ namespace SomeWeirdApplicationBackend
             });
 
             return services;
+        }
+
+        public static IApplicationBuilder MigrateDatabaseAndSeed(this IApplicationBuilder app)
+        {
+            using (var serviceScope = app.ApplicationServices.CreateScope())
+            {
+                var context = serviceScope.ServiceProvider.GetService<WebSiteContext>();
+                using (context)
+                {
+                    context.Database.Migrate();
+                    context.Database.EnsureCreated();
+                }
+            }
+
+            var seed2 = (BankingContextSeed)app.ApplicationServices.GetService(typeof(BankingContextSeed));
+            seed2.SeedAsync(app).Wait();
+
+            return app;
         }
     }
 }
