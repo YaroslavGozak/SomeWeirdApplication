@@ -3,3 +3,8 @@ export class Data{
     turboThreshold: number;
     data: any;
 }
+
+export class WebsiteStatistics{
+    url: string;
+    count: number;
+}

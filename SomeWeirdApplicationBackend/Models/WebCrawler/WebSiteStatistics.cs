@@ -9,7 +9,7 @@ namespace SomeWeirdApplicationBackend.Models.WebCrawler
     {
         public string Url { get; set; }
 
-        public int Occurrences { get; set; }
+        public int Count { get; set; }
 
         public IEnumerable<WebSiteStatistics> LinkedSites { get; set; }
 

@@ -1,9 +1,21 @@
-<div id="main-head" style="text-align:center">
-  <h1>
-    Welcome to {{ title }}!
-  </h1>
-  <div class='container'>
-    <app-output-graph></app-output-graph>
+  <div class="site">
+    <nav class="navbar navbar-expand-sm bg-light navbar-light">
+    <ul class="navbar-nav">
+      <li class="nav-item">
+        <a class="nav-link" routerLink="default" routerLinkActive="active">Default</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" routerLink="domains" routerLinkActive="active">Domains</a>
+      </li>
+    </ul>
+  </nav>
+
+  <div id="main-head" style="text-align:center">
+    <h1>
+      Welcome to {{ title }}!
+    </h1>
+    <div class='container'>
+      <router-outlet></router-outlet>
+    </div>
   </div>
 </div>
-<router-outlet></router-outlet>

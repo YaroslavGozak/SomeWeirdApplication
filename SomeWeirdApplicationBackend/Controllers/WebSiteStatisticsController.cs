@@ -54,17 +54,37 @@ namespace SomeWeirdApplicationBackend.Controllers
             if (!ValidateUrl(url))
                 return BadRequest("Url has inappropriate format");
 
-            var links = await _httpClient.GetStringAsync(url)
-                .ContinueWith((t) =>
+            try
             {
-                var html = t.Result;
-                var sites = GetLinkedDomains(html);
-                return sites;
-            });
+                string error = null;
+                var random = new Random();
+                var task = _httpClient.GetStringAsync(url);
+                var links = await task.ContinueWith(t =>
+                {
+                    if (t.IsCompleted)
+                    {
+                        var html = t.Result;
+                        var sites = GetLinkedDomains(html);
+                        return sites.OrderBy(s => s.Count).Reverse().Take(random.Next(10, 20));
+                    }
+                    else
+                    {
+                        error = t.Exception.Message;
+                        return null;
+                    }
+                });
 
-            if (links.Count() == 0)
-                return NotFound();
-            return Ok(links);
+                if (error != null)
+                    return BadRequest(error);
+                if (links.Count() == 0)
+                    return NotFound();
+                return Ok(links);
+            }
+            catch(Exception ex)
+            {
+                throw ex;
+            }
+            
         }
 
         // PUT: api/WebSiteStatistics/5
@@ -145,34 +165,59 @@ namespace SomeWeirdApplicationBackend.Controllers
 
         private IEnumerable<WebSiteStatistics> GetLinkedDomains(string html)
         {
-            var siteStatistics = new List<WebSiteStatistics>();
-            var pattern = "href=[',\"]http(s *)://.+[',\"]";
-            var matches = Regex.Matches(html, pattern);
-            var parts = matches.Select(m => m.Value);
-            foreach (var part in parts)
-            {
-                var link = part.Replace("href=\"http://", "").Replace("href=\"https://", "").Replace("\"", "");
-                var slashPosition = link.IndexOf("/");
-                link = slashPosition > 0 ? link.Substring(0, slashPosition ) : link;
-                var questionMarkPosition = link.IndexOf("?");
-                var domain = questionMarkPosition > 0 ? link.Substring(0, questionMarkPosition) : link;
+            List<WebSiteStatistics> siteStatistics = new List<WebSiteStatistics>();
+            IEnumerable<string> domains = ExtractDomains(html);
 
+            foreach (var domain in domains)
+            {
                 var site = siteStatistics.FirstOrDefault(s => s.Url == domain);
                 if (site != null)
                 {
-                    site.Occurrences++;
+                    site.Count++;
                 }
                 else
                 {
                     siteStatistics.Add(new WebSiteStatistics
                     {
                         Url = domain,
-                        Occurrences = 1
+                        Count = 1
                     });
                 }
             }
 
             return siteStatistics;
+        }
+
+        private static string ExtractDomain(string link)
+        {
+            var slashPosition = link.IndexOf("/");
+            link = slashPosition > 0 ? link.Substring(0, slashPosition) : link;
+            var questionMarkPosition = link.IndexOf("?");
+            var domain = questionMarkPosition > 0 ? link.Substring(0, questionMarkPosition) : link;
+            return domain;
+        }
+
+        private static IEnumerable<string> ExtractDomains(string html)
+        {
+            var pattern = "href=[',\"]http(s *)://.+[',\"]";
+            var matches = Regex.Matches(html, pattern);
+            var parts = matches.Select(m => m.Value);
+            parts = parts.Select(p => p.Replace("href=\"http://", "").Replace("href=\"https://", "").Replace("\"", ""));
+            parts.Select(p => { return ExtractDomain(p); });
+            return parts;
+        }
+    }
+
+    class SiteCountComparer : IEqualityComparer<WebSiteStatistics>
+    {
+        public bool Equals(WebSiteStatistics x, WebSiteStatistics y)
+        {
+            return x.Count.Equals(y.Count);
+        }
+
+        public int GetHashCode(WebSiteStatistics obj)
+        {
+            return obj.Count.GetHashCode();
         }
     }
 }

@@ -1,0 +1,11 @@
+<div>
+    <form class="form">
+        <div class="form-group">
+            <label for="url">Url</label>
+            <input type="text" class="form-control" id="url" [(ngModel)]="url" name="url" required>
+        </div>
+
+        <button type="button" class="btn btn-light" (click)="onSubmit()">Assess</button>
+    </form>
+</div>
+<div [attr.id]="containerIdentifier" class="chart-container"></div>

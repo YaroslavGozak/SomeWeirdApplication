@@ -1,0 +1,23 @@
+.form{
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px;
+
+    .form-group{
+        display: flex;
+        width: 100%;
+
+        label{
+            width: 50px;
+        }
+        .form-control{
+            min-width: 650px;
+        }
+    }
+}
+
+.chart-container{
+    border-radius: 0.8rem;
+}
