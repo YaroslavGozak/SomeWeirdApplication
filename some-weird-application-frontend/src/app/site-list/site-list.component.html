@@ -1,0 +1,30 @@
+<section class="sites">
+    <div class="draggable-zone">
+        <div class="interesting">
+            <h5 class="title" (click)="toggleInterestingSites()"> 
+                <fa-icon [icon]="interestingSitesStateIcon"></fa-icon> 
+                <span class="title-text">Interesting</span>
+            </h5>
+            <ul class="site-list" [ngClass]="{'collapsed': !expandInterestingSites}">
+                <li *ngFor="let site of interestingSites" class="site-list-item">
+                    <span class="site-url" (click)="siteClicked(site.url)" >
+                        {{site.domain}}
+                    </span>
+                </li>
+            </ul>
+        </div>
+        <div class="all">
+            <h5 class="title" (click)="toggleAllSites()"> 
+                <fa-icon [icon]="allSitesStateIcon "></fa-icon> 
+                <span class="title-text">All</span>
+            </h5>
+            <ul class="site-list" [ngClass]="{'collapsed': !expandAllSites}">
+                <li *ngFor="let site of allSites" class="site-list-item">
+                    <span class="site-url" (click)="siteClicked(site.url)">
+                        {{site.domain}}
+                    </span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</section>

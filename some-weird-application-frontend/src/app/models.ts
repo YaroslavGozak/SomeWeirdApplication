@@ -4,7 +4,8 @@ export class Data{
     data: any;
 }
 
-export class WebsiteStatistics{
+export class WebsiteInfo{
     url: string;
+    domain: string;
     count: number;
 }

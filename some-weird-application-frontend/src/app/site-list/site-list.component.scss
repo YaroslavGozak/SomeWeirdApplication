@@ -1,0 +1,67 @@
+.sites{
+    padding: 1rem;
+    padding-right: 0;
+    padding-top: 0;
+    border-bottom-right-radius: 1rem;
+    background-color: rgb(87, 87, 87);
+    color: #fff;
+    font-weight: 400;
+    max-height: calc(100vh - 56px);
+
+    .draggable-zone{
+        overflow-y: auto;
+        overflow-x: hidden;
+        max-height: calc(100vh - 86px);
+        padding-top: 1rem;
+
+        &::-webkit-scrollbar {
+            width: 8px;
+        }
+        &::-webkit-scrollbar-track {
+            background: rgb(87, 87, 87); 
+        }
+        &::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 4px;
+        }
+        &::-webkit-scrollbar-thumb:hover {
+            background: #ddd; 
+        }
+    
+        .site-list{
+            text-decoration: none;
+            list-style-type: none;
+    
+            &.collapsed{
+                display: none;
+            }
+    
+            .site-list-item{
+                .site-url{
+                    cursor: pointer;
+    
+                    &:hover{
+                        text-decoration: underline;
+                    }
+                }
+            }
+        }
+    
+        .title{
+            cursor: pointer;
+    
+            .title-text{
+                margin-left: 0.4rem;
+                margin-right: 0.4rem;
+                -webkit-user-select: none;  /* Chrome all / Safari all */
+                -moz-user-select: none;     /* Firefox all */
+                -ms-user-select: none;      /* IE 10+ */
+                user-select: none;
+            }
+        }
+    }
+}
+
+.collapsed{
+    height: 0;
+}

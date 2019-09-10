@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { DonutChartComponent } from './donut-chart.component';
+import { SiteListComponent } from './site-list.component';
 
-describe('OutputGraphComponent', () => {
-  let component: DonutChartComponent;
-  let fixture: ComponentFixture<DonutChartComponent>;
+describe('SiteListComponent', () => {
+  let component: SiteListComponent;
+  let fixture: ComponentFixture<SiteListComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ DonutChartComponent ]
+      declarations: [ SiteListComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(DonutChartComponent);
+    fixture = TestBed.createComponent(SiteListComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

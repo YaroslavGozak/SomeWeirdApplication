@@ -2,7 +2,7 @@ version: '3.4'
 
 services:
   some-weird-application-backend:
-    image: ${DOCKER_REGISTRY-}some-weird-application-backend
+    image: some-weird-application-backend
     build:
       context: .
       dockerfile: SomeWeirdApplicationBackend/Dockerfile
@@ -10,7 +10,7 @@ services:
       - sql.data
 
   some-weird-application-frontend:
-    image: ${DOCKER_REGISTRY-}some-weird-application-frontend
+    image: some-weird-application-frontend
     build:
       context: some-weird-application-frontend
       dockerfile: Dockerfile   

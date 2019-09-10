@@ -1,0 +1,15 @@
+.grid-container{
+    display: grid;
+    grid-template-columns: 25% 25% 25% 25%;
+    grid-template-areas: "sidebar chart chart chart"
+}
+
+.sidebar{
+    grid-area: sidebar;
+}
+
+.charts{
+    grid-area: chart;
+    text-align: center;
+    margin: 1rem;
+}

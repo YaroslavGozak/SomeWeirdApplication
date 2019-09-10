@@ -12,12 +12,14 @@
         label{
             width: 50px;
         }
-        .form-control{
-            min-width: 650px;
-        }
     }
 }
 
 .chart-container{
     border-radius: 0.8rem;
+    margin: 1rem;
+    box-shadow: 10px 10px 9px grey;
+    border: 1px solid lightgray;
+    min-width: 300px;
+    min-height: 400px;
 }

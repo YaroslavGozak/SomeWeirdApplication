@@ -14,27 +14,27 @@ namespace SomeWeirdApplicationBackend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class WebSiteStatisticsController : ControllerBase
+    public class WebSiteInfoController : ControllerBase
     {
         private readonly WebSiteContext _context;
         private readonly HttpClient _httpClient;
 
-        public WebSiteStatisticsController(WebSiteContext context)
+        public WebSiteInfoController(WebSiteContext context)
         {
             _context = context;
             _httpClient = new HttpClient();
         }
 
-        // GET: api/WebSiteStatistics
+        // GET: api/WebSiteInfo
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<WebSiteStatistics>>> GetWebSites()
+        public async Task<ActionResult<IEnumerable<WebSiteInfo>>> GetWebSites()
         {
-            return await _context.WebSites.ToListAsync();
+            return await _context.WebSites.OrderBy(w => w.Domain).ToListAsync();
         }
 
-        // GET: api/WebSiteStatistics/5
+        // GET: api/WebSiteInfo/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<WebSiteStatistics>> GetWebSiteStatistics(int id)
+        public async Task<ActionResult<WebSiteInfo>> GetWebSiteStatistics(int id)
         {
             var webSiteStatistics = await _context.WebSites.FindAsync(id);
 
@@ -46,10 +46,10 @@ namespace SomeWeirdApplicationBackend.Controllers
             return webSiteStatistics;
         }
 
-        // GET: api/WebSiteStatistics/referred
+        // GET: api/WebSiteInfo/referred
         [HttpGet()]
         [Route("/api/referred")]
-        public async Task<ActionResult<WebSiteStatistics>> GetReferredWebSiteStatistics(string url)
+        public async Task<ActionResult<WebSiteInfo>> GetReferredWebSiteStatistics(string url)
         {
             if (!ValidateUrl(url))
                 return BadRequest("Url has inappropriate format");
@@ -65,7 +65,7 @@ namespace SomeWeirdApplicationBackend.Controllers
                     {
                         var html = t.Result;
                         var sites = GetLinkedDomains(html);
-                        return sites.OrderBy(s => s.Count).Reverse().Take(random.Next(10, 20));
+                        return sites.OrderBy(s => s.Count).Reverse();
                     }
                     else
                     {
@@ -78,6 +78,30 @@ namespace SomeWeirdApplicationBackend.Controllers
                     return BadRequest(error);
                 if (links.Count() == 0)
                     return NotFound();
+
+                var currentDomain = ExtractDomain(url);
+                var currentSite = await _context.WebSites.FirstOrDefaultAsync(w => w.Domain == currentDomain);
+                if (currentSite == null)
+                {
+                    currentSite = new WebSiteInfo
+                    {
+                        Url = url,
+                        Domain = currentDomain,
+                        LinkedSites = links.ToList(),
+                        Count = 1
+                    };
+                    _context.Add(currentSite);
+                    await _context.SaveChangesAsync();
+                }
+                else if(currentSite.LinkedSites == null || currentSite.LinkedSites.Count == 0)
+                {
+                    var linkedSites = links.ToList();
+                    linkedSites.RemoveAll(l => l.Domain == currentDomain);
+                    currentSite.LinkedSites = linkedSites;
+
+                    await _context.SaveChangesAsync();
+                }
+
                 return Ok(links);
             }
             catch(Exception ex)
@@ -87,11 +111,11 @@ namespace SomeWeirdApplicationBackend.Controllers
             
         }
 
-        // PUT: api/WebSiteStatistics/5
+        // PUT: api/WebSiteInfo/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutWebSiteStatistics(int id, WebSiteStatistics webSiteStatistics)
+        public async Task<IActionResult> PutWebSiteStatistics(int id, WebSiteInfo webSiteStatistics)
         {
-            if (id != webSiteStatistics.InternalId)
+            if (id != webSiteStatistics.Id)
             {
                 return BadRequest();
             }
@@ -117,19 +141,19 @@ namespace SomeWeirdApplicationBackend.Controllers
             return NoContent();
         }
 
-        // POST: api/WebSiteStatistics
+        // POST: api/WebSiteInfo
         [HttpPost]
-        public async Task<ActionResult<WebSiteStatistics>> PostWebSiteStatistics(WebSiteStatistics webSiteStatistics)
+        public async Task<ActionResult<WebSiteInfo>> PostWebSiteStatistics(WebSiteInfo webSiteStatistics)
         {
             _context.WebSites.Add(webSiteStatistics);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetWebSiteStatistics", new { id = webSiteStatistics.InternalId }, webSiteStatistics);
+            return CreatedAtAction("GetWebSiteStatistics", new { id = webSiteStatistics.Id }, webSiteStatistics);
         }
 
-        // DELETE: api/WebSiteStatistics/5
+        // DELETE: api/WebSiteInfo/5
         [HttpDelete("{id}")]
-        public async Task<ActionResult<WebSiteStatistics>> DeleteWebSiteStatistics(int id)
+        public async Task<ActionResult<WebSiteInfo>> DeleteWebSiteStatistics(int id)
         {
             var webSiteStatistics = await _context.WebSites.FindAsync(id);
             if (webSiteStatistics == null)
@@ -143,17 +167,30 @@ namespace SomeWeirdApplicationBackend.Controllers
             return webSiteStatistics;
         }
 
+        // DELETE: api/WebSiteInfo/
+        [HttpDelete()]
+        public async Task<ActionResult<WebSiteInfo>> DeleteAllWebSiteStatistics()
+        {
+            _context.WebSites.RemoveRange(_context.WebSites);
+            await _context.SaveChangesAsync();
+
+            return Ok(null);
+        }
+
         private bool WebSiteStatisticsExists(int id)
         {
-            return _context.WebSites.Any(e => e.InternalId == id);
+            return _context.WebSites.Any(e => e.Id == id);
         }
 
         private bool ValidateUrl(string url)
         {
             if(String.IsNullOrEmpty(url) ||
                 !url.StartsWith("http") ||
-                !url.StartsWith("https") ||
-                url.Split('.').Length < 2)
+                !url.StartsWith("https"))
+            {
+                return false;
+            }
+            else if (url.Split('.').Length < 2)
             {
                 return false;
             }
@@ -163,59 +200,67 @@ namespace SomeWeirdApplicationBackend.Controllers
             }
         }
 
-        private IEnumerable<WebSiteStatistics> GetLinkedDomains(string html)
+        private IEnumerable<WebSiteInfo> GetLinkedDomains(string html)
         {
-            List<WebSiteStatistics> siteStatistics = new List<WebSiteStatistics>();
-            IEnumerable<string> domains = ExtractDomains(html);
+            List<WebSiteInfo> siteInfo = new List<WebSiteInfo>();
+            var links = ExtractLinks(html);
 
-            foreach (var domain in domains)
+            foreach (var link in links)
             {
-                var site = siteStatistics.FirstOrDefault(s => s.Url == domain);
+                var domain = ExtractDomain(link);
+                var site = siteInfo.FirstOrDefault(s => s.Domain == domain);
                 if (site != null)
                 {
                     site.Count++;
                 }
                 else
                 {
-                    siteStatistics.Add(new WebSiteStatistics
+                    siteInfo.Add(new WebSiteInfo
                     {
-                        Url = domain,
+                        Domain = domain,
+                        Url = link,
                         Count = 1
                     });
                 }
             }
 
-            return siteStatistics;
+            return siteInfo;
         }
 
         private static string ExtractDomain(string link)
         {
+            link = link.Replace("http://", "").Replace("https://", "");
+
             var slashPosition = link.IndexOf("/");
             link = slashPosition > 0 ? link.Substring(0, slashPosition) : link;
             var questionMarkPosition = link.IndexOf("?");
             var domain = questionMarkPosition > 0 ? link.Substring(0, questionMarkPosition) : link;
+
             return domain;
         }
 
-        private static IEnumerable<string> ExtractDomains(string html)
+        private static IEnumerable<string> ExtractLinks(string html)
         {
-            var pattern = "href=[',\"]http(s *)://.+[',\"]";
-            var matches = Regex.Matches(html, pattern);
-            var parts = matches.Select(m => m.Value);
-            parts = parts.Select(p => p.Replace("href=\"http://", "").Replace("href=\"https://", "").Replace("\"", ""));
-            parts.Select(p => { return ExtractDomain(p); });
-            return parts;
+            IEnumerable<string> list = new List<string>();
+            Regex regex = new Regex("(?:href|src)=[\"|']?(.*?)[\"|'|>]+", RegexOptions.Singleline | RegexOptions.CultureInvariant);
+            if (regex.IsMatch(html))
+            {
+                list = regex.Matches(html).Select(m => m.Groups[1].Value);
+                list = list.Where(l => l.StartsWith("http")); // http, https
+            }
+
+            return list;
         }
     }
 
-    class SiteCountComparer : IEqualityComparer<WebSiteStatistics>
+    class SiteCountComparer : IEqualityComparer<WebSiteInfo>
     {
-        public bool Equals(WebSiteStatistics x, WebSiteStatistics y)
+        public bool Equals(WebSiteInfo x, WebSiteInfo y)
         {
             return x.Count.Equals(y.Count);
         }
 
-        public int GetHashCode(WebSiteStatistics obj)
+        public int GetHashCode(WebSiteInfo obj)
         {
             return obj.Count.GetHashCode();
         }

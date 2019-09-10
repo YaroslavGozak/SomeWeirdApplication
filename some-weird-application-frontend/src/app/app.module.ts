@@ -4,19 +4,25 @@ import { FormsModule }   from '@angular/forms';
 
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {MatMenuModule} from '@angular/material/menu';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome'
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { OutputGraphComponent } from './output-graph/output-graph.component';
-import { DonutChartComponent } from './donut-chart/donut-chart.component';
+import { PieChartComponent } from './pie-chart/pie-chart.component';
+import { SiteListComponent } from './site-list/site-list.component';
+import { SiteGraphComponent } from './site-graph/site-graph.component';
 
 import { HttpClientModule } from '@angular/common/http';
+import { from } from 'rxjs';
 
 @NgModule({
   declarations: [
     AppComponent,
     OutputGraphComponent,
-    DonutChartComponent
+    PieChartComponent,
+    SiteListComponent,
+    SiteGraphComponent
   ],
   imports: [
     BrowserModule,
@@ -24,7 +30,8 @@ import { HttpClientModule } from '@angular/common/http';
     HttpClientModule,
     BrowserAnimationsModule,
     MatMenuModule,
-    FormsModule
+    FormsModule,
+    FontAwesomeModule
   ],
   providers: [],
   bootstrap: [AppComponent]

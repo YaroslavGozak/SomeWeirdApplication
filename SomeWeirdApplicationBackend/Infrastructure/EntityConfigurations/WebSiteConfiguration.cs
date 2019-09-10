@@ -5,14 +5,17 @@ using SomeWeirdApplicationBackend.Models.WebCrawler;
 
 namespace SomeWeirdApplicationBackend.Infrastructure.EntityConfigurations
 {
-    public class WebSiteConfiguration: IEntityTypeConfiguration<WebSiteStatistics>
+    public class WebSiteConfiguration: IEntityTypeConfiguration<WebSiteInfo>
     {
-        public void Configure(EntityTypeBuilder<WebSiteStatistics> builder)
+        public void Configure(EntityTypeBuilder<WebSiteInfo> builder)
         {
-            builder.HasKey(wb => wb.InternalId);
+            builder.HasKey(wb => wb.Id);
 
             builder.Property(wb => wb.Url)
                 .IsRequired();
+
+            var navigation = builder.Metadata.FindNavigation(nameof(WebSiteInfo.LinkedSites));
+            navigation.SetPropertyAccessMode(PropertyAccessMode.Field);
         }
     }
 }

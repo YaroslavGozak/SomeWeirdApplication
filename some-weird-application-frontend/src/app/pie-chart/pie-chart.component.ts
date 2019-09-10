@@ -1,42 +1,44 @@
 import { Component, OnInit, Input } from '@angular/core';
 import * as Highcharts from 'highcharts';
 import { Data } from '../models';
-import { DataService } from '../data.service';
+import { DataService } from '../services/data.service';
 
 declare var require: any;
 let Boost = require('highcharts/modules/boost');
 let noData = require('highcharts/modules/no-data-to-display');
 let More = require('highcharts/highcharts-more');
-let Wordcloud = require('highcharts/modules/wordcloud');
 
 Boost(Highcharts);
 noData(Highcharts);
 More(Highcharts);
 noData(Highcharts);
-Wordcloud(Highcharts);
 
 @Component({
-  selector: 'app-donut-chart',
-  templateUrl: './donut-chart.component.html',
-  styleUrls: ['./donut-chart.component.scss']
+  selector: 'app-pie-chart',
+  templateUrl: './pie-chart.component.html',
+  styleUrls: ['./pie-chart.component.scss']
 })
 
-export class DonutChartComponent implements OnInit {
+export class PieChartComponent implements OnInit {
   private options: any;
   private data: Data[];
-  private submitted = false;
 
-  public url: string = 'https://stackoverflow.com/questions/54706459/add-bootstrap-4-to-angular-6-or-angular-7-application';
+  @Input() url: string;
 
   @Input() containerIdentifier: string = 'web-links-chart';
 
   constructor(private service: DataService) { }
 
   ngOnInit() {
+    if(this.url == null){
+      this.url = 'https://stackoverflow.com/questions/54706459/add-bootstrap-4-to-angular-6-or-angular-7-application'
+    }
     this.getReferredDomains();
   }
 
 getReferredDomains(){
+  if(this.url == null)
+    return;
   this.service.getReferredDomains(this.url).then(data => {
     this.data = data;
     if (data != null) {
@@ -58,7 +60,6 @@ getReferredDomains(){
 
   onSubmit() { 
     console.log('Getting for: ' + this.url);
-    this.submitted = true;
     this.getReferredDomains();
    }
 
@@ -81,7 +82,8 @@ getReferredDomains(){
           allowPointSelect: true,
           cursor: 'pointer',
           dataLabels: {
-              enabled: false
+            enabled: true,
+            format: '<b>{point.name}</b>: {point.percentage:.1f} %'
           },
           showInLegend: false
         }

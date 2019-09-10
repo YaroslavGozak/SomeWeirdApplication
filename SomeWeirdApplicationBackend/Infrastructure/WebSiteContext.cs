@@ -9,7 +9,7 @@ namespace SomeWeirdApplicationBackend.Infrastructure
         public WebSiteContext(DbContextOptions<WebSiteContext> options) : base(options)
         {
         }
-        public DbSet<WebSiteStatistics> WebSites { get; set; }
+        public DbSet<WebSiteInfo> WebSites { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

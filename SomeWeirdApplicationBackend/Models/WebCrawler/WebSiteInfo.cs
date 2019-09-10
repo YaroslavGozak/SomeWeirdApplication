@@ -5,14 +5,16 @@ using System.Threading.Tasks;
 
 namespace SomeWeirdApplicationBackend.Models.WebCrawler
 {
-    public class WebSiteStatistics
+    public class WebSiteInfo
     {
         public string Url { get; set; }
 
+        public string Domain { get; set; }
+
         public int Count { get; set; }
 
-        public IEnumerable<WebSiteStatistics> LinkedSites { get; set; }
+        public ICollection<WebSiteInfo> LinkedSites { get; set; }
 
-        public int InternalId { get; set; }
+        public int Id { get; set; }
     }
 }

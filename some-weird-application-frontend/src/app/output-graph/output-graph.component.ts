@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import * as Highcharts from 'highcharts';
 import { Data } from './../models';
-import { DataService } from './../data.service';
+import { DataService } from '../services/data.service';
 
 declare var require: any;
 let Boost = require('highcharts/modules/boost');

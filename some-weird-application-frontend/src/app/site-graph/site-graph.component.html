@@ -1,0 +1,11 @@
+<div class="grid-container"> 
+    <aside class="sidebar">
+        <app-site-list (url)="onUrlChanged($event)"></app-site-list>
+    </aside>
+    <div class="charts">
+        <div>
+            <h2>Site referring</h2>
+        </div>
+        <app-pie-chart [url]="url"></app-pie-chart>
+    </div>
+</div>
