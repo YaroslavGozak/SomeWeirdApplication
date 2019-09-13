@@ -11,10 +11,10 @@ namespace SomeWeirdApplicationBackend.Models.WebCrawler
 
         public string Domain { get; set; }
 
-        public int Count { get; set; }
-
         public ICollection<WebSiteInfo> LinkedSites { get; set; }
 
         public int Id { get; set; }
+
+        public bool IsInteresting { get; set; }
     }
 }

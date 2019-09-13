@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using SomeWeirdApplicationBackend.Models.Bank;
 using SomeWeirdApplicationBackend.Models.WebCrawler;
 
 namespace SomeWeirdApplicationBackend.Infrastructure.EntityConfigurations
@@ -10,12 +9,13 @@ namespace SomeWeirdApplicationBackend.Infrastructure.EntityConfigurations
         public void Configure(EntityTypeBuilder<WebSiteInfo> builder)
         {
             builder.HasKey(wb => wb.Id);
+            builder.Property(wb => wb.Url).IsRequired();
+            builder.ForSqlServerHasIndex(wb => wb.Url);
+            builder.Property(wb => wb.Domain).IsRequired();
+            builder.Property(wb => wb.IsInteresting);
 
-            builder.Property(wb => wb.Url)
-                .IsRequired();
-
-            var navigation = builder.Metadata.FindNavigation(nameof(WebSiteInfo.LinkedSites));
-            navigation.SetPropertyAccessMode(PropertyAccessMode.Field);
+            //var navigation = builder.Metadata.FindNavigation(nameof(WebSiteInfo.LinkedSites));
+            //navigation.SetPropertyAccessMode(PropertyAccessMode.Field);
         }
     }
 }

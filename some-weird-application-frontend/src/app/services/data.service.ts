@@ -11,7 +11,7 @@ export class DataService {
   dataUrl = 'https://localhost:44384/api/data';
   domainUrl = 'https://localhost:44384/api/referred';
   siteListUrl = 'https://localhost:44384/api/WebSiteInfo';
-  interestingSiteListUrl = 'https://localhost:44384/api/referred';
+  interestingSiteListUrl = 'https://localhost:44384/api/WebSiteInfo/interesting';
 
   constructor(private http: HttpClient) { }
 
@@ -71,33 +71,11 @@ export class DataService {
   }
 
   getInterestingSites(): Promise<WebsiteInfo[]>{
-    let sites = [{
-      url: 'https://stackoverflow.com',
-      count: 1,
-      domain: 'stackoverflow.com'
-    },
-    {
-      url: 'https://domain.com',
-      count: 1,
-      domain: 'domain.com'
-    },
-    {
-      url: 'https://ukr.net',
-      count: 1,
-      domain: 'ukr.net'
-    },
-    {
-      url: 'https://mail.ru',
-      count: 1,
-      domain: 'mail.ru'
-    },
-    {
-      url: 'https://sinoptik.ua',
-      count: 1,
-      domain: 'sinoptik.ua'
-    },
-  ] as WebsiteInfo[];
-  return of(sites).toPromise();
-    return this.http.get<WebsiteInfo[]>(this.interestingSiteListUrl).toPromise();
+    return this.http.get<WebsiteInfo[]>(this.interestingSiteListUrl).toPromise()
+    .then(sites => sites)
+    .catch(err => {
+      console.log(err);
+      return new Array<WebsiteInfo>();
+    });
   }
 }

@@ -53,10 +53,6 @@
             .title-text{
                 margin-left: 0.4rem;
                 margin-right: 0.4rem;
-                -webkit-user-select: none;  /* Chrome all / Safari all */
-                -moz-user-select: none;     /* Firefox all */
-                -ms-user-select: none;      /* IE 10+ */
-                user-select: none;
             }
         }
     }
@@ -64,4 +60,11 @@
 
 .collapsed{
     height: 0;
+}
+
+.no-select{
+    -webkit-user-select: none;  /* Chrome all / Safari all */
+    -moz-user-select: none;     /* Firefox all */
+    -ms-user-select: none;      /* IE 10+ */
+    user-select: none;
 }

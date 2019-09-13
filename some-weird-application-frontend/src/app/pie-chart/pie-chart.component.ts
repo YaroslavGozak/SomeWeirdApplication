@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, SimpleChanges, SimpleChange } from '@angular/core';
 import * as Highcharts from 'highcharts';
 import { Data } from '../models';
 import { DataService } from '../services/data.service';
@@ -19,7 +19,8 @@ noData(Highcharts);
   styleUrls: ['./pie-chart.component.scss']
 })
 
-export class PieChartComponent implements OnInit {
+export class PieChartComponent implements OnInit, OnChanges {
+
   private options: any;
   private data: Data[];
 
@@ -33,13 +34,19 @@ export class PieChartComponent implements OnInit {
     if(this.url == null){
       this.url = 'https://stackoverflow.com/questions/54706459/add-bootstrap-4-to-angular-6-or-angular-7-application'
     }
-    this.getReferredDomains();
+    this.getReferredDomains(this.url);
   }
 
-getReferredDomains(){
-  if(this.url == null)
+  ngOnChanges(changes: SimpleChanges): void {
+    const currentUrl: SimpleChange = changes.url;
+    if(currentUrl != null)
+      this.getReferredDomains(currentUrl.currentValue);
+  }
+
+getReferredDomains(url: string){
+  if(url == null)
     return;
-  this.service.getReferredDomains(this.url).then(data => {
+  this.service.getReferredDomains(url).then(data => {
     this.data = data;
     if (data != null) {
       console.log(data);
@@ -60,7 +67,7 @@ getReferredDomains(){
 
   onSubmit() { 
     console.log('Getting for: ' + this.url);
-    this.getReferredDomains();
+    this.getReferredDomains(this.url);
    }
 
   setPieOptions(data: any): any{

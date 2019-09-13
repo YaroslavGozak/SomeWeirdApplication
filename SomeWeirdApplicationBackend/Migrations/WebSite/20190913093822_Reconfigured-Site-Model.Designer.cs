@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SomeWeirdApplicationBackend.Infrastructure;
 
 namespace SomeWeirdApplicationBackend.Migrations.WebSite
 {
     [DbContext(typeof(WebSiteContext))]
-    partial class WebSiteContextModelSnapshot : ModelSnapshot
+    [Migration("20190913093822_Reconfigured-Site-Model")]
+    partial class ReconfiguredSiteModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -28,16 +30,12 @@ namespace SomeWeirdApplicationBackend.Migrations.WebSite
                     b.Property<string>("Domain")
                         .IsRequired();
 
-                    b.Property<bool>("IsInteresting");
-
                     b.Property<string>("Url")
                         .IsRequired();
 
                     b.Property<int?>("WebSiteInfoId");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Url");
 
                     b.HasIndex("WebSiteInfoId");
 

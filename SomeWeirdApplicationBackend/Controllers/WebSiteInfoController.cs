@@ -29,12 +29,38 @@ namespace SomeWeirdApplicationBackend.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<WebSiteInfo>>> GetWebSites()
         {
-            return await _context.WebSites.OrderBy(w => w.Domain).ToListAsync();
+            try
+            {
+                var all = await _context.WebSites.ToListAsync();
+                return Ok(all.Distinct(new SiteDomainComparer()).OrderBy(w => w.Domain).AsEnumerable());
+            }
+            catch(Exception ex)
+            {
+                throw ex;
+            }
+            
+        }
+
+        // GET: api/WebSiteInfo/interesting
+        [HttpGet]
+        [Route("interesting")]
+        public async Task<ActionResult<IEnumerable<WebSiteInfo>>> GetInterestingWebSites()
+        {
+            try
+            {
+                var all = await _context.WebSites.Where(ws => ws.IsInteresting).ToListAsync();
+                return Ok(all.Distinct(new SiteDomainComparer()).OrderBy(w => w.Domain).AsEnumerable());
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
         }
 
         // GET: api/WebSiteInfo/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<WebSiteInfo>> GetWebSiteStatistics(int id)
+        public async Task<ActionResult<WebSiteInfo>> GetWebSiteInfo(int id)
         {
             var webSiteStatistics = await _context.WebSites.FindAsync(id);
 
@@ -49,7 +75,7 @@ namespace SomeWeirdApplicationBackend.Controllers
         // GET: api/WebSiteInfo/referred
         [HttpGet()]
         [Route("/api/referred")]
-        public async Task<ActionResult<WebSiteInfo>> GetReferredWebSiteStatistics(string url)
+        public async Task<ActionResult<WebSiteInfo>> GetReferredWebSiteInfo(string url)
         {
             if (!ValidateUrl(url))
                 return BadRequest("Url has inappropriate format");
@@ -58,51 +84,39 @@ namespace SomeWeirdApplicationBackend.Controllers
             {
                 string error = null;
                 var random = new Random();
-                var task = _httpClient.GetStringAsync(url);
-                var links = await task.ContinueWith(t =>
+                var task = _httpClient.GetAsync(url);
+                var httpContent = await task.ContinueWith(t =>
                 {
-                    if (t.IsCompleted)
+                    var response = t.Result;
+                    if (response.IsSuccessStatusCode)
                     {
-                        var html = t.Result;
-                        var sites = GetLinkedDomains(html);
-                        return sites.OrderBy(s => s.Count).Reverse();
+                        return response.Content;
                     }
-                    else
-                    {
-                        error = t.Exception.Message;
-                        return null;
-                    }
-                });
+                    error = response.ReasonPhrase;
+                    return null;
+
+                }, TaskContinuationOptions.OnlyOnRanToCompletion);
 
                 if (error != null)
                     return BadRequest(error);
+
+                var html = await httpContent.ReadAsStringAsync();
+                var links = GetLinks(html);
+
+                
                 if (links.Count() == 0)
                     return NotFound();
 
-                var currentDomain = ExtractDomain(url);
-                var currentSite = await _context.WebSites.FirstOrDefaultAsync(w => w.Domain == currentDomain);
-                if (currentSite == null)
-                {
-                    currentSite = new WebSiteInfo
-                    {
-                        Url = url,
-                        Domain = currentDomain,
-                        LinkedSites = links.ToList(),
-                        Count = 1
-                    };
-                    _context.Add(currentSite);
-                    await _context.SaveChangesAsync();
-                }
-                else if(currentSite.LinkedSites == null || currentSite.LinkedSites.Count == 0)
-                {
-                    var linkedSites = links.ToList();
-                    linkedSites.RemoveAll(l => l.Domain == currentDomain);
-                    currentSite.LinkedSites = linkedSites;
+                await UpdateLinksForSite(url, links);
 
-                    await _context.SaveChangesAsync();
-                }
+                var viewModel = links.GroupBy(ws => ws.Domain).Select(g => new
+                {
+                    Domain = g.Key,
+                    Url = g.First().Url,
+                    Count = g.ToList().Count
+                });
 
-                return Ok(links);
+                return Ok(viewModel);
             }
             catch(Exception ex)
             {
@@ -113,7 +127,7 @@ namespace SomeWeirdApplicationBackend.Controllers
 
         // PUT: api/WebSiteInfo/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutWebSiteStatistics(int id, WebSiteInfo webSiteStatistics)
+        public async Task<IActionResult> PutWebSiteInfo(int id, WebSiteInfo webSiteStatistics)
         {
             if (id != webSiteStatistics.Id)
             {
@@ -128,7 +142,7 @@ namespace SomeWeirdApplicationBackend.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!WebSiteStatisticsExists(id))
+                if (!WebSiteInfoExists(id))
                 {
                     return NotFound();
                 }
@@ -143,7 +157,7 @@ namespace SomeWeirdApplicationBackend.Controllers
 
         // POST: api/WebSiteInfo
         [HttpPost]
-        public async Task<ActionResult<WebSiteInfo>> PostWebSiteStatistics(WebSiteInfo webSiteStatistics)
+        public async Task<ActionResult<WebSiteInfo>> PostWebSiteInfo(WebSiteInfo webSiteStatistics)
         {
             _context.WebSites.Add(webSiteStatistics);
             await _context.SaveChangesAsync();
@@ -153,7 +167,7 @@ namespace SomeWeirdApplicationBackend.Controllers
 
         // DELETE: api/WebSiteInfo/5
         [HttpDelete("{id}")]
-        public async Task<ActionResult<WebSiteInfo>> DeleteWebSiteStatistics(int id)
+        public async Task<ActionResult<WebSiteInfo>> DeleteWebSiteInfo(int id)
         {
             var webSiteStatistics = await _context.WebSites.FindAsync(id);
             if (webSiteStatistics == null)
@@ -169,7 +183,7 @@ namespace SomeWeirdApplicationBackend.Controllers
 
         // DELETE: api/WebSiteInfo/
         [HttpDelete()]
-        public async Task<ActionResult<WebSiteInfo>> DeleteAllWebSiteStatistics()
+        public async Task<ActionResult<WebSiteInfo>> DeleteAllWebSiteInfo()
         {
             _context.WebSites.RemoveRange(_context.WebSites);
             await _context.SaveChangesAsync();
@@ -177,7 +191,7 @@ namespace SomeWeirdApplicationBackend.Controllers
             return Ok(null);
         }
 
-        private bool WebSiteStatisticsExists(int id)
+        private bool WebSiteInfoExists(int id)
         {
             return _context.WebSites.Any(e => e.Id == id);
         }
@@ -200,7 +214,7 @@ namespace SomeWeirdApplicationBackend.Controllers
             }
         }
 
-        private IEnumerable<WebSiteInfo> GetLinkedDomains(string html)
+        private IEnumerable<WebSiteInfo> GetLinks(string html)
         {
             List<WebSiteInfo> siteInfo = new List<WebSiteInfo>();
             var links = ExtractLinks(html);
@@ -208,20 +222,11 @@ namespace SomeWeirdApplicationBackend.Controllers
             foreach (var link in links)
             {
                 var domain = ExtractDomain(link);
-                var site = siteInfo.FirstOrDefault(s => s.Domain == domain);
-                if (site != null)
+                siteInfo.Add(new WebSiteInfo
                 {
-                    site.Count++;
-                }
-                else
-                {
-                    siteInfo.Add(new WebSiteInfo
-                    {
-                        Domain = domain,
-                        Url = link,
-                        Count = 1
-                    });
-                }
+                    Domain = domain,
+                    Url = link
+                });
             }
 
             return siteInfo;
@@ -251,18 +256,86 @@ namespace SomeWeirdApplicationBackend.Controllers
 
             return list;
         }
+
+        private async Task UpdateLinksForSite(string url, IEnumerable<WebSiteInfo> links)
+        {
+            var currentDomain = ExtractDomain(url);
+            var currentSite = await _context.WebSites.Include(site => site.LinkedSites).FirstOrDefaultAsync(w => w.Url == url);
+
+            if (currentSite == null)
+            {
+                var existingLinks = _context.WebSites.ToList().Except(links, new SiteComparer());
+                var siteExistingLinks = existingLinks.Intersect(links);
+                var siteNotExistingLnks = links.Except(siteExistingLinks);
+                var newLinks = siteExistingLinks.Union(siteNotExistingLnks);
+
+                var isInteresting = IsInteresting(newLinks);
+
+                currentSite = new WebSiteInfo
+                {
+                    Url = url,
+                    Domain = currentDomain,
+                    LinkedSites = newLinks.ToList(),
+                    IsInteresting = isInteresting
+                };
+                _context.Add(currentSite);
+                await _context.SaveChangesAsync();
+            }
+            else if (currentSite.LinkedSites == null || currentSite.LinkedSites.Count == 0)
+            {
+                var existingLinks = _context.WebSites.ToList().Except(links, new SiteComparer());
+                var siteExistingLinks = existingLinks.Intersect(links);
+                var siteNotExistingLnks = links.Except(siteExistingLinks);
+                var newLinks = siteExistingLinks.Union(siteNotExistingLnks).ToList();
+
+                var isInteresting = IsInteresting(newLinks);
+
+                currentSite.LinkedSites = newLinks;
+                currentSite.IsInteresting = isInteresting;
+
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        private bool IsInteresting(IEnumerable<WebSiteInfo> links)
+        {
+            var repeating = links.GroupBy(ws => ws.Domain).Select(g => new
+            {
+                Domain = g.Key,
+                g.ToList().Count
+            });
+            var minCountByThree = repeating.Min(r => r.Count) * 3;
+            var maxCount = repeating.Max(r => r.Count);
+            var totalCount = repeating.Count();
+            var isInteresting = totalCount <= 16 && maxCount > minCountByThree;
+
+            return isInteresting;
+        }
     }
 
-    class SiteCountComparer : IEqualityComparer<WebSiteInfo>
+    class SiteDomainComparer : IEqualityComparer<WebSiteInfo>
     {
         public bool Equals(WebSiteInfo x, WebSiteInfo y)
         {
-            return x.Count.Equals(y.Count);
+            return x.Domain.Equals(y.Domain);
         }
 
         public int GetHashCode(WebSiteInfo obj)
         {
-            return obj.Count.GetHashCode();
+            return obj.Domain.GetHashCode();
+        }
+    }
+
+    class SiteComparer : IEqualityComparer<WebSiteInfo>
+    {
+        public bool Equals(WebSiteInfo x, WebSiteInfo y)
+        {
+            return x.Domain.Equals(y.Domain) && x.Url.Equals(y.Url);
+        }
+
+        public int GetHashCode(WebSiteInfo obj)
+        {
+            return obj.Domain.GetHashCode() ^ obj.Url.GetHashCode();
         }
     }
 }
