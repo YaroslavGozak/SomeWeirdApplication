@@ -63,6 +63,14 @@ namespace SomeWeirdApplicationBackend
     {
         public static IServiceCollection AddCustomDbContext(this IServiceCollection services, IConfiguration configuration)
         {
+            var canConnect = configuration["ConnectionString"] != null;
+
+            if (!canConnect)
+            {
+                services.AddDbContext<WebSiteContext>(options => options.UseInMemoryDatabase("WebSites"));
+                return services;
+            }
+
             services.AddDbContext<WebSiteContext>(options =>
             {
                 options.UseSqlServer(configuration["ConnectionString"],
