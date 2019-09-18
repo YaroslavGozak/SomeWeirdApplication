@@ -1,15 +1,20 @@
 ﻿using System;
-using System.Reflection;
-using Common;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Ordering.API.EventHandlers;
-using Ordering.API.Events;
-//using Common;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Common;
+using Handling.API.Events;
+using Handling.API.EventHandlers;
 
-namespace Ordering.API
+namespace Handling.API
 {
     public class Startup
     {
@@ -23,7 +28,8 @@ namespace Ordering.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+
             services.AddSingleton<IEventBus, EventBusRabbitMQ>();
         }
 
@@ -36,6 +42,7 @@ namespace Ordering.API
             }
             else
             {
+                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
 
@@ -43,8 +50,7 @@ namespace Ordering.API
             app.UseMvc();
 
             var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
-            eventBus.Subscribe<ProductPriceChangedEvent,
-             ProductPriceChangedEventHandler>();
+            eventBus.Subscribe<ProductPriceChangedEvent, ProductPriceChangedEventHandler>();
         }
     }
 }

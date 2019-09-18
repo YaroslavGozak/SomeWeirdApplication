@@ -17,5 +17,11 @@ namespace Common.SubscriptionManager
              where T : IntegrationEvent;
 
         string GetEventKey<T>();
+
+        bool HasSubscriptionsForEvent(string eventName);
+
+        IEnumerable<Type> GetHandlersForEvent(string eventName);
+
+        Type GetEventTypeByName(string eventName);
     }
 }
