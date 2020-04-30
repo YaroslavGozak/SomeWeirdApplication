@@ -27,7 +27,7 @@
     "@fortawesome/free-solid-svg-icons": "^5.10.2",
     "bootstrap": "^4.3.1",
     "highcharts": "^7.1.2",
-    "jquery": "^3.4.1",
+    "jquery": "^3.5.0",
     "lint": "^0.7.0",
     "popper": "^1.0.1",
     "run": "^1.4.0",
